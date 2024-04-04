@@ -1,0 +1,2 @@
+auto_turtle:parameter_testing:simple4wheeler:simple_pub_sub:tf_turtle
+-DCATKIN_DEVEL_PREFIX=/home/akshatgg/repos/akshat_ws/devel -DCMAKE_INSTALL_PREFIX=/home/akshatgg/repos/akshat_ws/install -G Unix Makefiles

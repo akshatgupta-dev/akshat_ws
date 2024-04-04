@@ -1,0 +1,26 @@
+<launch>
+<!-- this 
+      is 
+      a 
+      comment
+-->
+
+<node pkg="parameter_testing" 
+      type="our_get_private_param.py" 
+      name="this_can_be_what_ever_like_our_get_private_param" 
+      output="screen">
+
+      <param name="~private_example" value="private param from launch file" />
+
+</node>
+
+<node pkg="parameter_testing" 
+      type="our_get_private_param.py" 
+      name="this_can_be_what_ever_like_our_get_private_param2" 
+      output="screen">
+
+      <param name="~private_example" value="private param2 from launch file" />
+
+</node>
+
+</launch>

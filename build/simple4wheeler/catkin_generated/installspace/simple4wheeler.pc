@@ -1,0 +1,8 @@
+prefix=/home/akshatgg/repos/akshat_ws/install
+
+Name: simple4wheeler
+Description: Description of simple4wheeler
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
