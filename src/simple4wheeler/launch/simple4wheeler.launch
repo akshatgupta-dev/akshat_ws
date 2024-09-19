@@ -1,190 +1,29 @@
-<robot name="simple4wheeler" xmlns:xacro="http://www.ros.org/wiki/xacro">
-    <xacro:property name="pii" value="3.14159265359"/>
-    <link name="map">
-    </link>
+<launch>
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="gui" value="true"/>
+        <arg name="world_name" value="$(find simple4wheeler)/world/walls.world"/>
+    </include>
 
-    <link name="link_chassis">
-        <!-- pose x,y,z, roll, pitch, yaw -->
-        <pose>0 0 0.1 0 0 0</pose>
-        <inertial>
-            <mass value="5"/>
-            <origin rpy="0 0 0" xyz="0 0 0.1"/>
-            <inertia ixx="0.03954" 
-                     ixy="0" 
-                     ixz="0" 
-                     iyy="0.10620" 
-                     iyz="0" 
-                     izz="0.10620"/>
-        </inertial>
-        <collision name="collision_chassis">
-            <geometry>
-                <box size="0.5 0.3 0.07"/>
-            </geometry>
-        </collision>
-        <visual>
-            <geometry>
-                <box size="0.5 0.3 0.07"/>
-            </geometry>
-        </visual>
-    </link>
+    <param name="robot_description"
+        command="$(find xacro)/xacro
+        '$(find simple4wheeler)/model/simple4wheeler.xacro'"/>
 
-    <joint name="joint_map" type="fixed">
-        <parent link="map"/>
-        <child link="link_chassis"/>
-    </joint>
+    <node   name="spawn_urdf" 
+            pkg="gazebo_ros" 
+            type="spawn_model"  
+            args="-param robot_description -urdf -model simple4wheeler"/>
 
-    <link name="link_right_back_wheel">
-        <inertial>
-            <mass value="0.2"/>
-            <origin xyz="0.075 0.17 -0.03" rpy="1.5708 1.5708 0"/>
-            <inertia ixx="0.00052" 
-                     ixy="0" 
-                     ixz="0" 
-                     iyy="0.00052" 
-                     iyz="0" 
-                     izz="0.00100"/>
-        </inertial>
-        <collision name="collision_right_back_wheel">
-            <geometry>
-                <cylinder radius="0.1" length="0.04"/>
-            </geometry>
-        </collision>
-    
-        <visual name="visual_right_back_wheel">
-            <geometry>
-                <cylinder radius="0.1" length="0.04"/>
-            </geometry>
-        </visual>
-    </link>
-    <joint name="joint_right_back_wheel" type="continuous">
-        <origin xyz="0.075 0.17 -0.03" rpy="0 1.5708 1"/>
-        <parent link="link_chassis"/>
-        <child link="link_right_back_wheel"/>
-        <axis rpy="0 0 0" xyz="1 0 0"/>
-        <limit effort="10" velocity="10"/>
-        <joint_properties damping="1.0" friction="1.0"/>
-    </joint>
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+    </node>    
 
-    <link name="link_lidar">
-        <inertial>
-            <mass value="0.05"/>
-            <inertia ixx="0.00001" 
-                     ixy="0" 
-                     ixz="0" 
-                     iyy="0.00001" 
-                     iyz="0" 
-                     izz="0.00001"/>
-        </inertial>
-        
-        <visual>
-            <geometry>
-                <mesh filename="file://package://simple4wheeler/mesh/rplidar_a2_simple.stl"/>
-            </geometry>
-        </visual>
-        
-        <collision>
-            <geometry>
-                <box size="0.07 0.07 0.07"/>
-            </geometry>
-        </collision>
-    </link>
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+        <param name="use_gui" value="false"/>
+    </node>
 
-    <joint name="joint_lidar" type="fixed">
-        <origin xyz="0 0 0.07" rpy="0 0 0"/>
-        <parent link="link_chassis"/>
-        <child link="link_lidar"/>
-    </joint>   
+    <node name="cmd_vel" pkg="turtlesim" type="turtle_teleop_key" >
+        <remap from="/turtle1/cmd_vel" to="cmd_vel" />
+    </node>
 
-    <gazebo reference="link_lidar">
-        <sensor type="ray" name="sensor_lidar">
-            <update_rate>10</update_rate>
-            <visualize>true</visualize>
-            <ray>
-                <scan>
-                    <horizontal>
-                        <samples>400</samples>
-                        <min_angle>-3.142</min_angle>
-                        <max_angle>3.142</max_angle>
-                    </horizontal>
-                    <vertical>
-                        <samples>1</samples>
-                        <min_angle>-0.05</min_angle>
-                        <max_angle>0.05</max_angle>
-                    </vertical>
-                </scan>
-                <range>
-                    <min>0.15</min>
-                    <max>3.5</max>
-                    <resolution>0.01</resolution>
-                </range>
-            </ray>
-
-            <plugin name="gazebo_ros_lidar" filename="libgazebo_ros_laser.so">
-                <gaussianNoise>0.01</gaussianNoise>
-                <updateRate>10</updateRate>
-                <topicName>lidar</topicName>
-                <minRange>0.15</minRange>
-                <maxRange>12</maxRange>
-                <frameName>link_lidar</frameName>
-            </plugin>
-        </sensor>
-    </gazebo>
-
-    <gazebo>
-        <plugin name="skid_steer_drive_controller" filename="libgazebo_ros_skid_steer_drive.so">
-            <updateRate>100.0</updateRate>
-            <robotNamespace>/</robotNamespace>
-            <leftFrontJoint>front_left_wheel_joint</leftFrontJoint>
-            <rightFrontJoint>front_right_wheel_joint</rightFrontJoint>
-            <leftRearJoint>back_left_wheel_joint</leftRearJoint>
-            <rightRearJoint>back_right_wheel_joint</rightRearJoint>
-            <wheelSeparation>0.4</wheelSeparation>
-            <wheelDiameter>0.215</wheelDiameter>
-            <robotBaseFrame>base_link</robotBaseFrame>
-            <torque>20</torque>
-            <topicName>cmd_vel</topicName>
-            <broadcastTF>false</broadcastTF>
-        </plugin>
-    </gazebo>
-
-    <gazebo reference="link_ultra_sonic1">
-        <sensor type="ray" name="sensor_sonic1">
-            <pose> 0 0 0 0 0 0</pose>
-            <update_rate>60</update_rate>
-            <visualize>true</visualize>
-            <ray>
-                <scan>
-                    <horizontal>
-                        <samples>5</samples>
-                        <resolution>1</resolution>
-                        <min_angle>-0.05</min_angle>
-                        <max_angle>0.05</max_angle>
-                    </horizontal>
-                    <vertical>
-                        <samples>1</samples>
-                        <resolution>1</resolution>
-                        <min_angle>-0.05</min_angle>
-                        <max_angle>0.05</max_angle>
-                </scan>
-                <range>
-                    <min>0.01</min>
-                    <max>10</max>
-                    <resolution>0.01</resolution>
-                </range>
-            </ray>
-
-            <plugin name="controller_sonic1" filename="libgazebo_ros_range.so">
-                <gaussianNoise>0.005</gaussianNoise>
-                <alwaysOn>true</alwaysOn>
-                <updateRate>60</updateRate>
-                <topicName>/ultrasonic1</topicName>
-                <frameName>link_ultra_sonic1</frameName>
-                <minRange>0.01</minRange>
-                <maxRange>10</maxRange>
-                <fov>0.5</fov>
-                <radiation>ultrasound</radiation>                    
-            </plugin>
-        </sensor>
-    </gazebo>   
-
-</robot>
+    <node name="robot_controller" pkg="simple4wheeler" type="sensor_listener.py" output="screen">
+    </node>
+</launch>
